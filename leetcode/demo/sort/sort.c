@@ -1,5 +1,20 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+
+#include "utils.h"
+
+
+static int cmp(const void *a, const void *b)
+{
+    return (*(int *)a > *(int *)b);
+}
+
+static void right_sort(int *arr, int size)
+{
+    qsort(arr, size, sizeof(int), cmp);
+    return ;
+}
 
 static void print(int *arr, int size)
 {
@@ -70,102 +85,125 @@ static void insert_sort(int *arr, int size)
     return ;
 }
 
-typedef struct test_vec
+static void merge(int *arr, int left, int mid, int right)
 {
-    int *in;
-    int *expected;
-    int size;
-}test_vec_t;
-
-static int arr0[2][0] =
-{
-    {},
-    {},
-};
-
-static int arr1[2][1] =
-{
-    {1},
-    {1},
-};
-
-static int arr2[2][2] =
-{
-    {4,2},
-    {2,4},
-};
-
-static int arr3[2][3] = 
-{
-    {4,2,5},
-    {2,4,5},
-};
-
-static int arr4[2][8] = 
-{
-    {7,6,5,4,3,2,1,0},
-    {0,1,2,3,4,5,6,7},
-};
-
-static test_vec_t tests[] = 
-{
-    {.in = arr0[0], .expected = arr0[1], .size = 0},
-    {.in = arr1[0], .expected = arr1[1], .size = 1},
-    {.in = arr2[0], .expected = arr2[1], .size = 2},
-    {.in = arr3[0], .expected = arr3[1], .size = 3},
-    {.in = arr4[0], .expected = arr4[1], .size = 8},
-};
-
-typedef struct sort_func
-{
-    void (*sort)(int *arr, int size);
-    void (*test)(struct sort_func *this);
-    const char *func_name;
-    test_vec_t **tests_vectors;
-    int vectors_size;
-}sort_func_t;
-
-static void test_one(struct sort_func *this)
-{
-    
-    test_vec_t *tests = *this->tests_vectors;
-    int failed = 0;
-    int vectors_size = this->vectors_size;
-
-    printf("test %s\n", this->func_name);
-    for (int i = 0; i < vectors_size; i++)
+    int tmp[right - left + 1];
+    int i = 0;
+    int p = left, q = mid + 1;
+    while (p <= mid && q <= right)
     {
-        int size = tests[i].size;
-        int tmp[size];
-        memcpy(tmp, tests[i].in, size*sizeof(int));
-        insert_sort(tmp, size);
-        if (memcmp(tmp, tests[i].expected, size))
-        {
-            fprintf(stderr, "test%d failed\n", i);
-            failed++;
-        }
-            
+        tmp[i++] = arr[p] > arr[q] ? arr[q++] : arr[p++];
     }
-    printf("%d tests, %d pass, %d failed\n\n", vectors_size, vectors_size - failed, failed);
+
+    while (p <= mid)
+        tmp[i++] = arr[p++];
+
+    while (q <= right)
+        tmp[i++] = arr[q++];
+
+    memcpy(arr + left, tmp, (right - left + 1)*sizeof(int));
+
     return ;
 }
 
-sort_func_t f_list[] = 
+static void merge_process(int *arr, int left, int right)
 {
-    [0] = {.sort = selection_sort,  .func_name = "selection sort",       
-                .tests_vectors = (test_vec_t **)tests,   .vectors_size = 5, .test = test_one},
+    if (left == right)
+        return ;
 
-    [1] = {.sort = bubble_sort,     .func_name = "bubble sort",          
-                .tests_vectors = (test_vec_t **)tests,   .vectors_size = 5, .test = test_one},
+    int mid = left + ((right - left) >> 1);
+    merge_process(arr, left, mid);
+    merge_process(arr, mid + 1, right);
+    return merge(arr, left, mid, right);
+}
 
-    [2] = {.sort = insert_sort,     .func_name = "insert sort",          
-                .tests_vectors = (test_vec_t **)tests,   .vectors_size = 5, .test = test_one},
-};
+/* 归并排序 */
+static void merge_sort(int *arr, int size)
+{
+    if (arr == NULL || size < 2)
+        return ;
+
+    return merge_process(arr, 0, size - 1);
+}
+
+typedef void (*sort_func)(int *arr, int size);
+
+typedef struct test_t
+{ 
+    void (*run)(struct test_t *this);
+    void (*destroy)(struct test_t *this);
+    char *test_func;
+
+    sort_func right;
+    sort_func test;
+    int test_times;
+    int max_size;
+    int max_num;
+}test_t;
+
+static void test_destroy(test_t *this)
+{
+    free(this->test_func);
+    free(this);
+    return ;
+}
+
+static void test_run(test_t *this)
+{
+    int faild = 0;
+
+    for (int i = 0; i < this->test_times; i++)
+    {
+        int len;
+        int *arr = gen_random_arr(this->max_size, this->max_num, &len);
+        int *copy = malloc(sizeof(int) * len);
+        memcpy(copy, arr, sizeof(int) * len);
+        this->right(copy, len);
+        this->test(arr, len);
+        if (memcmp(arr, copy, sizeof(int) * len))
+            faild++;
+
+        free(arr);
+        free(copy);
+    }
+    printf("%s : %d pass, %d failed\n", this->test_func, this->test_times - faild, faild);
+
+    return ;
+}
+
+static test_t *test_create_default(char *fname, sort_func right, sort_func test)
+{
+    test_t *ret = malloc(sizeof(*ret));
+
+    ret->test_times = 1000;
+    ret->max_num = 100;
+    ret->max_size = 100;
+    ret->test_func = strdup(fname);
+    ret->right = right;
+    ret->test = test;
+    ret->run = test_run;
+    ret->destroy = test_destroy;
+
+    return ret;
+}
 
 int main()
 {
-    for (int i = 0; i < 3; i++)
-        f_list[i].test(&f_list[i]);
+    test_t *test_select_sort = test_create_default("select sort", right_sort, selection_sort);
+    test_select_sort->run(test_select_sort);
+    test_select_sort->destroy(test_select_sort);
+
+    test_t *test_bubble_sort = test_create_default("bubble sort", right_sort, bubble_sort);
+    test_bubble_sort->run(test_bubble_sort);
+    test_bubble_sort->destroy(test_bubble_sort);
+
+    test_t *test_insert_sort = test_create_default("insert sort", right_sort, insert_sort);
+    test_insert_sort->run(test_insert_sort);
+    test_insert_sort->destroy(test_insert_sort);
+
+    test_t *test_merge_sort = test_create_default("merge  sort", right_sort, merge_sort);
+    test_merge_sort->run(test_merge_sort);
+    test_merge_sort->destroy(test_merge_sort);
 
     return 0;
 }
