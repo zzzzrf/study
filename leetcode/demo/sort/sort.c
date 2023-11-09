@@ -23,12 +23,18 @@ static void print(int *arr, int size)
     putchar('\n');
 }
 
-/* i != j*/
 static void swap(int *arr, int i, int j)
 {
+#if 0
     arr[i] = arr[i] ^ arr[j];
     arr[j] = arr[i] ^ arr[j];
     arr[i] = arr[i] ^ arr[j];
+#else
+    int tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+#endif
+
 }
 
 /* 选择排序 */
@@ -126,6 +132,57 @@ static void merge_sort(int *arr, int size)
     return merge_process(arr, 0, size - 1);
 }
 
+static void partation(int *arr, int left, int right, int *equal_left, int *equal_right)
+{
+    int less = left - 1;
+    int more = right;
+    int i = left;
+
+    while (i < more)
+    {
+        if (arr[i] > arr[right])
+        {
+            swap(arr, i, more - 1);
+            more--;
+        }
+        else if (arr[i] < arr[right])
+        {
+            swap(arr, i, less + 1);
+            i++, less++;
+        }
+        else 
+        {
+            i++;    
+        }
+    }
+    swap(arr, more, right);
+    *equal_left = less + 1;
+    *equal_right = more;
+}
+
+static void __quick_sort(int *arr, int left, int right)
+{
+    if (left >= right)
+        return ;
+    
+    int rand_idx = left + (random() % (right - left));
+    swap(arr, rand_idx, right);
+
+    int equal_left, equal_right;
+    partation(arr, left, right, &equal_left, &equal_right);
+    __quick_sort(arr, left, equal_left - 1);
+    __quick_sort(arr, equal_right + 1, right);
+    return ;
+}
+
+static void quick_sort(int *arr, int size)
+{
+    if (arr == NULL || size < 2)
+        return ;
+
+    return __quick_sort(arr, 0, size - 1);
+}
+
 typedef void (*sort_func)(int *arr, int size);
 
 typedef struct test_t
@@ -204,6 +261,10 @@ int main()
     test_t *test_merge_sort = test_create_default("merge  sort", right_sort, merge_sort);
     test_merge_sort->run(test_merge_sort);
     test_merge_sort->destroy(test_merge_sort);
+
+    test_t *test_quick_sort = test_create_default("quick  sort", right_sort, quick_sort);
+    test_quick_sort->run(test_quick_sort);
+    test_quick_sort->destroy(test_quick_sort);
 
     return 0;
 }
