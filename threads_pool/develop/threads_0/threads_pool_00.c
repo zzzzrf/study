@@ -115,9 +115,10 @@ static void process_job(processor_t *processor, worker_thread_t *worker)
 static void *process_jobs(worker_thread_t *worker)
 {
     processor_t *processor = worker->processor;
-    printf( "started worker thread %ld\n", worker->thread->tid);
+    
     pthread_mutex_lock(&processor->mutex);
-
+    printf( "started worker thread %ld\n", worker->thread->tid);
+    
     while (processor->desired_threads >= processor->total_threads)
     {
         if (get_job(processor, worker))
