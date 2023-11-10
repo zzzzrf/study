@@ -240,11 +240,13 @@ static bool get_job(private_processor_t *this, worker_thread_t *worker)
 		}
 
         struct job_entry *first = TAILQ_FIRST(&this->jobs[i]);
-        TAILQ_REMOVE(&this->jobs[i], first, entries);
-
-        worker->job = &first->job; 
-        worker->priority = i;
-        return true;
+		if (first)
+        {
+			TAILQ_REMOVE(&this->jobs[i], first, entries);
+        	worker->job = &first->job; 
+        	worker->priority = i;
+			return true;
+		}
 	}
 	return false;
 }
@@ -256,7 +258,7 @@ static void *_cb_process_jobs(struct worker_entry *entry)
 	/* worker threads are not cancelable by default */
 	thread_cancelability(false);
 
-	printf( "started worker thread %.2u", thread_current_id());
+	printf( "started worker thread %.2u\n", thread_current_id());
 
 	this->mutex->lock(this->mutex);
 	while (this->desired_threads >= this->total_threads)
@@ -322,12 +324,12 @@ processor_t *processor_create()
 {
     private_processor_t *this;
 
-    this->public.get_total_threads = _get_total_threads;
-    this->public.get_idle_threads = _get_idle_threads;
-    this->public.set_threads = _set_threads;
-
     this = malloc(sizeof(*this));
     memset(this, 0, sizeof(*this));
+
+	this->public.get_total_threads = _get_total_threads;
+    this->public.get_idle_threads = _get_idle_threads;
+    this->public.set_threads = _set_threads;
 
     this->mutex = mutex_create(MUTEX_TYPE_DEFAULT);
     this->job_added = condvar_create(CONDVAR_TYPE_DEFAULT);

@@ -296,6 +296,7 @@ static void thread_cleanup_popall_internal(private_thread_t *this)
         TAILQ_REMOVE(&this->cleanup_handlers, curr, entries);
         curr->handler.cleanup(curr->handler.arg);
         free(curr);
+		curr = next;
     }
 }
 

@@ -3,32 +3,16 @@
 #include <unistd.h>
 
 #include "thread.h"
-
-static void cleanup1(void *arg)
-{
-    printf("[%s]\n", __func__);
-}
-
-static void cleanup2(void *arg)
-{
-    printf("[%s]\n", __func__);
-}
-
-static void *start(void *arg)
-{
-    thread_cleanup_push(cleanup1, NULL);
-    thread_cleanup_push(cleanup2, NULL);
-    printf("%p\n", arg);
-    sleep(1);
-    printf("[%s] end\n", __func__);
-    return NULL;
-}
+#include "processor.h"
 
 int main(void)
 {
     threads_init();
-    thread_t *th = thread_create(start, NULL);
-    th->join(th);
+    
+    processor_t *processor = processor_create();
+    processor->set_threads(processor, 1);
+
+    pause();
     threads_deinit();
     return 0;
 }
