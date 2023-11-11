@@ -1,12 +1,7 @@
 #ifndef __THREADS_POOL_00_H__
 #define __THREADS_POOL_00_H__
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <pthread.h>
-#include <signal.h>
-#include <errno.h>
 #include <stdbool.h>
 #include <sys/queue.h>
 
@@ -15,6 +10,9 @@ typedef void *(*thread_main_t)(void *arg);
 typedef struct processor_t processor_t;
 typedef struct thread_t thread_t;
 typedef struct worker_thread_t worker_thread_t;
+typedef enum job_status_t job_status_t;
+typedef enum job_requeue_type_t job_requeue_type_t;
+typedef struct job_requeue_t job_requeue_t;
 typedef struct job_t job_t;
 typedef struct job_queue job_q_t;
 typedef struct thread_queue thread_q_t;
@@ -26,17 +24,37 @@ struct thread_t
     void *arg;
 };
 
+enum job_status_t 
+{
+	JOB_STATUS_QUEUED = 0,
+	JOB_STATUS_EXECUTING,
+	JOB_STATUS_CANCELED,
+	JOB_STATUS_DONE,
+};
+
+enum job_requeue_type_t {
+	JOB_REQUEUE_TYPE_NONE = 0,
+	JOB_REQUEUE_TYPE_FAIR,
+	JOB_REQUEUE_TYPE_DIRECT,
+	JOB_REQUEUE_TYPE_SCHEDULE,
+};
+
+struct job_requeue_t {
+	job_requeue_type_t type;
+    unsigned int rel;
+};
+
 struct job_t
 {
-    int status;
+    job_status_t status;
     bool (*cancel)(job_t *this);
-    void (*execute)(job_t *this);
+    job_requeue_t (*execute)(job_t *this);
     void (*destory)(job_t *this);
 };
 
 struct job_entry
 {
-    job_t job;
+    job_t *job;
     TAILQ_ENTRY(job_entry) entries;
 };
 
@@ -61,12 +79,15 @@ struct processor_t
 {
     /* public interface */
     void (*set_threads)(processor_t *this, int count);
+    void (*queue_job) (processor_t *this, struct job_entry *job_entry);
+    void (*execute_job)(processor_t *this, struct job_entry *job_entry);
     void (*cancel)(processor_t *this);
     void (*destory)(processor_t *this);
     
 	/* private member */
     int total_threads;
     int desired_threads;
+    int working_threads;
     thread_q_t threads;
     job_q_t jobs;
     pthread_mutex_t mutex;
