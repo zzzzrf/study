@@ -1,0 +1,21 @@
+{
+    "configurations": [
+    {
+        "name": "(gdb) 启动",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/utils/main",
+        
+        "useExtendedRemote": true,
+        "miDebuggerPath":"/usr/bin/gdb",
+        "miDebuggerServerAddress": "39.99.231.133:1234",
+        
+        "args": [],
+        "stopAtEntry": false,
+        "cwd": "${workspaceFolder}",
+        "environment": [],
+        "externalConsole": false,
+        "MIMode": "gdb",
+    }
+    ]
+}
