@@ -471,7 +471,7 @@ entry = get_bfd_entry(filename);
 if (entry)
 {
   data->entry = entry;
-  /* 编译每个节, 对每个节调用find_addr函数 */
+  /* 遍历每个节, 对每个节调用find_addr函数 */
   bfd_map_over_sections(entry->abfd, (void*)find_addr, data);
 }
 pthread_mutex_unlock(&bfd_mutex);
