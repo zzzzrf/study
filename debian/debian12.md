@@ -161,3 +161,17 @@ zrf@debian:~$ source ~/.bashrc
 ```bash
 git config --global alias.st status
 ```
+
+* samba
+
+```bash
+tail /etc/samba/smb.conf 
+[USR]
+    path = /home/USR
+    browseable = no
+    writable = yes
+    valid user = USR
+
+zrf@debian:~$ sudo smbpasswd -a USR
+
+```
