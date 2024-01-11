@@ -13,9 +13,9 @@ lib_LTLIBRARIES = libpoll.la
 libpoll_la_LDFLAGS = -version-info 1:0:1
 
 libpoll_la_SOURCES = \
-	mypoll.c
+	tester.c
 
 nobase_include_HEADERS = \
-	mypoll.h
+	tester.h
 
 AM_CFLAGS = -Wall
