@@ -32,19 +32,10 @@ struct packet
     char buf[1024];
 };
 
-struct event
-{
-    struct event *next;
-    callback *cb;
-    void *user;
-    char name[0];
-};
-
 struct conn
 {
     int s;
     struct request *reqs;
-    struct event *events;
     struct packet pkt;
     fdcb fdcb;
     void *user;

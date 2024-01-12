@@ -6,7 +6,7 @@ AM_CFLAGS = -Wall
 LDADD = \
 	$(top_builddir)/libpoll.la
 
-hello_SOURCES = hello.c
+test1_SOURCES = test1.c
 
 noinst_PROGRAMS = \
-	hello 
+	test1 
