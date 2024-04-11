@@ -340,3 +340,29 @@ call plug#begin()
 Plug 'junegunn/vim-easy-align'
 Plug 'vim-airline/vim-airline'
 call plug#end()
+
+```
+
+* quem
+
+```shell
+# 创建磁盘
+zrf@debian:~$ qemu-img create -f qcow2 ~/image/baseimage/base.img 100G
+Formatting '/home/zrf/image/baseimage/base.img', fmt=qcow2 cluster_size=65536 extended_l2=off compression_type=zlib size=107374182400 lazy_refcounts=off refcount_bits=16
+
+# 安装系统
+zrf@debian:~$ sudo qemu-system-x86_64 --enable-kvm -m 4G -smp 8 -nic none -boot order=dc -hda ~/image/baseimage/base.img -cdrom ~/image/iso/ubuntu-23.10.1-desktop-amd64.iso 
+
+# 启动系统
+sudo qemu-system-x86_64 --enable-kvm -m 4G -smp 8 -hda ~/image/baseimage/base.img -device e1000,driver=e1000,netdev=eth1 -netdev bridge,id=eth1,br=br1,helper=/usr/lib/qemu/qemu-bridge-helper
+
+# ssh免密登录:
+ssh-copy-id -i ~/.ssh/id_rsa.pub zrf@192.168.206.201
+```
+
+* frr
+
+```bash
+# 源码编译与安装
+https://docs.frrouting.org/projects/dev-guide/en/latest/building.html
+```
